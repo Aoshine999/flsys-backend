@@ -4,6 +4,76 @@ from .auth_handlers import AuthHandler
 
 auth_bp = Blueprint('auth', __name__)
 
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    """管理员注册API
+    
+    请求体:
+    {
+      "username": "用户名",
+      "password": "密码",
+      "email": "邮箱（可选）",
+      "full_name": "姓名（可选）"
+    }
+    
+    成功返回:
+    {
+      "admin": {
+        "id": 数字,
+        "username": "字符串",
+        "email": "字符串",
+        "full_name": "字符串",
+        "is_active": 布尔值
+      },
+      "token": "JWT令牌字符串"
+    }
+    
+    失败返回:
+    {
+      "message": "错误信息",
+      "error_code": "错误代码",
+      "errors": {
+        "字段名": ["错误详情"]
+      }
+    }
+    """
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        email = data.get('email')
+        full_name = data.get('full_name')
+        
+        # 调用注册处理器
+        admin, token, errors = AuthHandler.register(username, password, email, full_name)
+        
+        if errors:
+            # 数据验证失败
+            if 'username' in errors and '已被使用' in errors['username'][0]:
+                # 用户名已存在
+                return jsonify({
+                    "message": errors['username'][0],
+                    "error_code": "USERNAME_EXISTS"
+                }), 409
+            else:
+                # 其他验证错误
+                return jsonify({
+                    "message": "数据验证失败",
+                    "errors": errors
+                }), 400
+        
+        # 注册成功
+        return jsonify({
+            "admin": admin.serialize,
+            "token": token
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "message": f"注册失败: {str(e)}",
+            "error_code": "SYSTEM_ERROR"
+        }), 500
+
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """管理员登录API

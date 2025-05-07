@@ -16,6 +16,21 @@ class AuthHandler:
         return AuthService.login(username, password)
     
     @staticmethod
+    def register(username, password, email=None, full_name=None):
+        """管理员注册
+        
+        Args:
+            username (str): 用户名
+            password (str): 密码
+            email (str, optional): 电子邮件
+            full_name (str, optional): 姓名
+            
+        Returns:
+            tuple: (admin, token, errors) 如果成功返回(admin, token, None)，失败则返回(None, None, errors)
+        """
+        return AuthService.register(username, password, email, full_name)
+    
+    @staticmethod
     def logout():
         """管理员登出
         
